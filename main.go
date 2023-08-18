@@ -3,7 +3,7 @@ package main
 import (
 	"awesomeProject/app/controller/notes"
 	"awesomeProject/app/controller/send"
-	"awesomeProject/app/controller/users"
+	"awesomeProject/app/controller/user"
 	"awesomeProject/app/middleware"
 	"awesomeProject/pkg/db"
 	"awesomeProject/pkg/response"
@@ -26,25 +26,39 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
-	r.Use(middleware.AuthJWT())
 
-	notesGroup := r.Group("/notes")
-	notesGroup.Use(middleware.AuthJWT())
+	noteGroup := r.Group("/notes")
+	noteGroup.Use(middleware.AuthJWT())
 	{
-		notesGroup.POST("/add", notes.Add)
-		notesGroup.POST("/update", notes.Update)
-		notesGroup.POST("/index", notes.Index)
-		notesGroup.POST("/detail", notes.Detail)
+		noteGroup.POST("/add", notes.Add)
+		noteGroup.POST("/update", notes.Update)
+		noteGroup.POST("/index", notes.Index)
+		noteGroup.POST("/detail", notes.Detail)
+	}
+
+	userGroup := r.Group("/users")
+	userGroup.Use(middleware.AuthJWT())
+	{
+		userGroup.POST("/add", user.Add)
+		userGroup.POST("/index", user.Index)
+		userGroup.POST("/detail", user.Detail)
+		userGroup.POST("/update", user.Update)
+		userGroup.POST("/delete", user.Delete)
+	}
+
+	noAuthGroup := r.Group("/")
+	{
+		noAuthGroup.POST("/users/login", user.Login)
 	}
 
 	r.POST("/send", send.Mail, middleware.AuthJWT())
-
-	r.POST("/users/login", users.Login)
-	r.POST("users/add", users.Add, middleware.AuthJWT())
 
 	r.NoRoute(func(c *gin.Context) {
 		response.Abort404(c)
 	})
 
-	r.Run(":8089")
+	err := r.Run(":8089")
+	if err != nil {
+		return
+	}
 }
