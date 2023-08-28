@@ -5,13 +5,14 @@ import (
 	"awesomeProject/app/request/userReq"
 	"awesomeProject/pkg/db"
 	"awesomeProject/pkg/helpers"
+	"time"
 )
 
 type UserService struct {
 }
 
 func (us *UserService) GetByLogin(account string, password string) (userModel *user.User, err error) {
-	field := []string{"name", "email", "account", "last_login"}
+	field := []string{"id", "name", "email", "account", "last_login"}
 	err = db.Db.Select(field).Where("account = ? AND password = ?", account, helpers.Str2Md5(password)).Find(&userModel).Error
 	return
 }
@@ -29,7 +30,7 @@ func (us *UserService) Add(data userReq.Add) (err error) {
 
 func (us *UserService) Index(data userReq.Search) (list []user.User, total int64, err error) {
 	limit := data.Limit
-	offset := (data.Page - 1) * data.Limit
+	offset := (data.Page.Page - 1) * data.Limit
 	var userModel user.User
 	query := db.Db.Model(&userModel)
 	if err = query.Count(&total).Error; err != nil {
@@ -41,7 +42,7 @@ func (us *UserService) Index(data userReq.Search) (list []user.User, total int64
 	return
 }
 
-func (us *UserService) GetById(id string) (userModel user.User, err error) {
+func (us *UserService) GetById(id int) (userModel user.User, err error) {
 	field := []string{"name", "email", "account", "last_login", "created_at", "updated_at"}
 	err = db.Db.Select(field).Where("id = ?", id).First(&userModel).Error
 	return
@@ -63,4 +64,9 @@ func (us *UserService) Delete(id string) (err error) {
 	var userModel user.User
 	err = db.Db.Where("id = ?", id).Delete(&userModel).Error
 	return
+}
+
+func (us *UserService) SetLoginTime(id string) {
+	var userModel user.User
+	db.Db.Model(&userModel).Where("id = ?", id).Update("last_login", time.Now())
 }

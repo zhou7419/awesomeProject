@@ -1,9 +1,7 @@
 package send
 
 import (
-	"awesomeProject/app/model/note"
 	"awesomeProject/auth"
-	"awesomeProject/pkg/db"
 	"awesomeProject/pkg/mail"
 	"awesomeProject/pkg/response"
 	"encoding/json"
@@ -37,14 +35,5 @@ func Mail(c *gin.Context) {
 		return
 	}
 
-	response.Success(c)
-}
-
-func Add(c *gin.Context) {
-	mailModel := note.Note{
-		Type: "note",
-		Date: "07-21",
-	}
-	db.Db.Create(&mailModel)
 	response.Success(c)
 }

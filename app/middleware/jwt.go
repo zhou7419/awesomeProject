@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	pkgJwt "awesomeProject/pkg/jwt"
 	"awesomeProject/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -8,10 +9,9 @@ import (
 
 func AuthJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		tokenStr := c.Request.Header.Get("Authorization")
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-			// 在这里返回用于验证签名的密钥
+		token, err := jwt.ParseWithClaims(tokenStr, &pkgJwt.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+			// 这个函数返回用于验证签名的密钥
 			return []byte(""), nil
 		})
 
@@ -20,12 +20,13 @@ func AuthJWT() gin.HandlerFunc {
 			return
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			c.Set("claims", claims)
-		} else {
+		if !token.Valid {
 			response.Unauthorized(c, "token验证失败")
 			return
 		}
+
+		claims := token.Claims.(*pkgJwt.CustomClaims)
+		c.Set("claims", claims)
 
 		c.Next()
 	}

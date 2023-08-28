@@ -36,6 +36,7 @@ func Index(c *gin.Context) {
 	list, total, err := us.Index(searchReq)
 	if err != nil {
 		response.BadRequest(c, err)
+		return
 	}
 
 	response.Data(c, gin.H{
@@ -98,21 +99,22 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	result, err := us.GetByLogin(loginReq.Account, loginReq.Password)
-	if err != nil {
+	data, err := us.GetByLogin(loginReq.Account, loginReq.Password)
+	if err != nil || data.ID == 0 {
 		response.Abort403(c, "用户名或密码错误")
 		return
 	}
 
-	token, err := jwt.Get(strconv.Itoa(int(result.ID)), result.Name)
+	token, err := jwt.Get(int(data.ID), data.Name)
 	if err != nil {
 		response.Abort500(c, "token生成失败")
 		return
 	}
-	data := map[string]any{
-		"user":  result,
-		"token": token,
-	}
 
-	response.JSON(c, data)
+	us.SetLoginTime(strconv.FormatUint(data.ID, 10))
+
+	response.JSON(c, gin.H{
+		"user":  data,
+		"token": token,
+	})
 }

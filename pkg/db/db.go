@@ -16,16 +16,16 @@ func DbConnect() {
 	dsn := "root:123456@tcp(localhost:3306)/pro?charset=utf8mb4&parseTime=True&loc=Local"
 	var err error
 
+	logFile, err := os.Create("log/gorm.log")
 	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // 自定义日志输出器
+			log.New(logFile, "\r\n", log.LstdFlags), // 自定义日志输出器
 			logger.Config{
-				SlowThreshold:             200 * time.Millisecond, // 慢查询阈值
-				LogLevel:                  logger.Info,            // 日志级别
-				IgnoreRecordNotFoundError: true,                   // 忽略记录未找到错误
-				Colorful:                  true,                   // 彩色日志
+				SlowThreshold: 200 * time.Millisecond, // 慢查询阈值
+				LogLevel:      logger.Info,            // 日志级别
 			},
 		),
+		//Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		fmt.Println(err.Error())
